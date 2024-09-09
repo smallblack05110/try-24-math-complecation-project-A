@@ -51,18 +51,21 @@ def cal_dra_note_site(r_0,theta_intial):
         # 将当前解得的 r_1 作为新的 r_0
         r_0= r_1_solution[0]
 
-
 for i in range(0,301,60):
     t = i
     beta = (8.8 - np.sqrt(77.44 - (2 * alpha1 * v * t) / np.sqrt(1 + alpha1 ** 2)))/alpha1  # 龙头转过的弧度
     r_initial = -alpha1 * beta + 8.8
     cal_dra_note_site(r_initial,theta_initial)
-    df = pd.DataFrame({
-        '极径':rou,
-        '弧度': radians,
+
+for r,theta in zip(rou,radians):
+    dra_note_x.append(r * np.cos(theta))
+    dra_note_y.append(-r * np.sin(theta))
+df = pd.DataFrame({
+        'x':dra_note_x,
+        'y':dra_note_y,
     })
 
-    df.to_excel('dra_note_site.xlsx', index=False)
+df.to_excel('dra_note_site.xlsx', index=False)
 
 # dra_note_site[0][1] = 8.80
 # dra_note_site[0][2] = 0
