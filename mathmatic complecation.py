@@ -31,8 +31,8 @@ dra_note_y = [] #记录每节点y位置
 dra_note_v = [] #记录每节点速度
 
 # 定义方程
-def equation(r_1, r_0):
-    return r_0 ** 2 + r_1 ** 2 - 2 * r_0 * r_1 * np.cos((1 / alpha1) * (r_1 - r_0)) - delta_r1 ** 2
+def equation(r_1, r_0,delta):
+    return r_0 ** 2 + r_1 ** 2 - 2 * r_0 * r_1 * np.cos((1 / alpha1) * (r_1 - r_0)) - delta ** 2
 def equation2(r_0,r_1,v_0,v_1):
     return (r_0 - r_1 * np.cos((r_1 - r_0) / alpha1) - (r_1 * r_0) / alpha1 * np.sin((r_1 - r_0) / alpha1)) * (v_0 / np.sqrt(1 + (r_0 ** 2) / alpha1 **2))
     + (r_1 - r_0 * np.cos((r_1 - r_0) / alpha1) + (r_1 * r_0) / alpha1 * np.sin((r_1 - r_0) / alpha1)) * (v_1 / np.sqrt(1 + (r_1 ** 2 / alpha1 ** 2)))
@@ -42,12 +42,13 @@ def cal_dra_note_site(r_0,theta_intial):
     rou.append(r_0)
     radians.append(theta_intial)
     # 循环求解r_1
+    delta = delta_r1
     for i in range(223):
         initial_guess = r_0 + 0.01
         if i == 1:
-            delta_r1 = delta_r2
+           delta = delta_r2
         # 使用fsolve求解r_1
-        r_1_solution = fsolve(equation, initial_guess, args=(r_0))
+        r_1_solution = fsolve(equation, initial_guess, args=(r_0,delta))
         # 将解得的 r_1 保存到 solutions 列表
         rou.append(r_1_solution[0])
         radians.append(-((r_1_solution[0] - 8.8) / (-alpha1)))
@@ -79,14 +80,14 @@ df = pd.DataFrame({
     })
 df.to_excel('dra_note_site.xlsx', index=False)
 
-#画出各节点初始位置
-# fig,axe = plt.subplots(subplot_kw={'projection': 'polar'})
-# axe.grid(True)
-# plt.plot(radians,rou,linestyle='-',marker='.',markersize=5)
-# axe.set_title("Dragon_note_Site", va='bottom')
-# plt.show()
-fig,axe = plt.subplots()
+# 画出各节点初始位置
+fig,axe = plt.subplots(subplot_kw={'projection': 'polar'})
 axe.grid(True)
-plt.axis('equal')
-plt.plot(dra_note_x,dra_note_y)
+plt.plot(radians,rou,linestyle='-',marker='.',markersize=5)
+axe.set_title("Dragon_note_Site", va='bottom')
 plt.show()
+# fig,axe = plt.subplots()
+# axe.grid(True)
+# plt.axis('equal')
+# plt.plot(dra_note_x,dra_note_y)
+# plt.show()
