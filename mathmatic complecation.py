@@ -29,13 +29,13 @@ theta_initial = (r_initial - 8.8) / (-alpha1)
 dra_note_x = [] #记录每节点x位置
 dra_note_y = [] #记录每节点y位置
 dra_note_v = [] #记录每节点速度
+dra_note_v.append(1.0)
 
 # 定义方程
 def equation(r_1, r_0,delta):
     return r_0 ** 2 + r_1 ** 2 - 2 * r_0 * r_1 * np.cos((1 / alpha1) * (r_1 - r_0)) - delta ** 2
 def equation2(r_0,r_1,v_0,v_1):
-    return (r_0 - r_1 * np.cos((r_1 - r_0) / alpha1) - (r_1 * r_0) / alpha1 * np.sin((r_1 - r_0) / alpha1)) * (v_0 / np.sqrt(1 + (r_0 ** 2) / alpha1 **2))
-    + (r_1 - r_0 * np.cos((r_1 - r_0) / alpha1) + (r_1 * r_0) / alpha1 * np.sin((r_1 - r_0) / alpha1)) * (v_1 / np.sqrt(1 + (r_1 ** 2 / alpha1 ** 2)))
+    return (r_0-r_1*np.cos((r_1-r_0)/alpha1)-r_0*r_1/alpha1*np.sin((r_1-r_0)/alpha1))*v_0/np.sqrt(1+(r_0/alpha1)**2)+(r_1-r_0*np.cos((r_1-r_0)/alpha1)+r_0*r_1/alpha1*np.sin((r_1-r_0)/alpha1))*v_1/np.sqrt(1+(r_0/alpha1)**2)
 
 #计算龙头及每节节点实时位置
 def cal_dra_note_site(r_0,theta_intial):
@@ -54,38 +54,46 @@ def cal_dra_note_site(r_0,theta_intial):
         radians.append(-((r_1_solution[0] - 8.8) / (-alpha1)))
         # 将当前解得的 r_1 作为新的 r_0
         r_0= r_1_solution[0]
-def cal_dra_note_v(r_0,r_1,v_0):
+def cal_dra_note_v(v_0):
+    for i in range(0, len(rou) - 1):
         initial_guess = v_0 * 0.99999
+        r_0 = rou[i]
+        r_1 = rou[i+1]
         v_1_solution = fsolve(equation2,initial_guess,args=(r_0,r_1,v_0))
-        dra_note_v.append(abs(v_1_solution[0]))
-        v_0 =abs( v_1_solution[0])
+        dra_note_v.append(v_1_solution[0])
+        v_0 = v_1_solution[0]
 
-for i in range(0,2,60):
-    t = i
-    beta = (8.8 - np.sqrt(77.44 - (2 * alpha1 * v * t) / np.sqrt(1 + alpha1 ** 2)))/alpha1  # 龙头转过的弧度
-    r_initial = -alpha1 * beta + 8.8
-    theta_initial = (r_initial - 8.8) / (-alpha1)
-    cal_dra_note_site(r_initial,theta_initial)
-dra_note_v.append(1.0)
-for i in range(0,len(rou) - 1):
-    cal_dra_note_v(rou[i],rou[i+1],1)
+if __name__ == '__main__':
 
-for r,theta in zip(rou,radians):
-    dra_note_x.append(r * np.cos(theta))
-    dra_note_y.append(r * np.sin(theta))
-df = pd.DataFrame({
-        'x':dra_note_x,
-        'y':dra_note_y,
-        '速度':dra_note_v,
-    })
-df.to_excel('dra_note_site.xlsx', index=False)
+    for i in range(0,2,60):
+        t = i
+        beta = (8.8 - np.sqrt(77.44 - (2 * alpha1 * v * t) / np.sqrt(1 + alpha1 ** 2)))/alpha1  # 龙头转过的弧度
+        r_initial = -alpha1 * beta + 8.8
+        theta_initial = (r_initial - 8.8) / (-alpha1)
+        cal_dra_note_site(r_initial,theta_initial)
 
-# 画出各节点初始位置
-fig,axe = plt.subplots(subplot_kw={'projection': 'polar'})
-axe.grid(True)
-plt.plot(radians,rou,linestyle='-',marker='.',markersize=5)
-axe.set_title("Dragon_note_Site", va='bottom')
-plt.show()
+    cal_dra_note_v(v)
+
+    for r,theta in zip(rou,radians):
+        dra_note_x.append(r * np.cos(theta))
+        dra_note_y.append(r * np.sin(theta))
+    df = pd.DataFrame({
+            '极径':rou,
+            '弧度':radians,
+            'x':dra_note_x,
+            'y':dra_note_y,
+            '速度':dra_note_v,
+        })
+
+    df.to_excel('dra_note_site.xlsx', index=False)
+
+    # 画出各节点初始位置
+    fig,axe = plt.subplots(subplot_kw={'projection': 'polar'})
+    axe.grid(True)
+    plt.plot(radians,rou,linestyle='-',marker='.',markersize=5)
+    axe.set_title("Dragon_note_Site", va='bottom')
+    plt.show()
+
 # fig,axe = plt.subplots()
 # axe.grid(True)
 # plt.axis('equal')
